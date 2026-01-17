@@ -25,7 +25,7 @@ const MessengerLayout = ({ currentUser }: MessengerLayoutProps) => {
       case 'profile':
         return <ProfilePanel user={user} onUpdateUser={setUser} />;
       case 'settings':
-        return <SettingsPanel />;
+        return <SettingsPanel user={user} onUpdateUser={setUser} />;
       case 'music':
         return <MusicPanel />;
       case 'wallet':
@@ -36,10 +36,10 @@ const MessengerLayout = ({ currentUser }: MessengerLayoutProps) => {
         return <FriendsPanel />;
       default:
         return (
-          <div className="flex h-screen">
+          <>
             <ChatList onSelectChat={setSelectedChat} selectedChat={selectedChat} />
             <ChatWindow chat={selectedChat} currentUser={user} />
-          </div>
+          </>
         );
     }
   };

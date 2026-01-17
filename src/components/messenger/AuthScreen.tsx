@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -26,17 +27,31 @@ const AuthScreen = ({ onAuthComplete }: AuthScreenProps) => {
     }
   };
 
-  const handleProfileSubmit = () => {
+  const handleProfileSubmit = async () => {
     if (nickname.trim()) {
-      onAuthComplete({
-        phone,
-        nickname,
-        username: `@${nickname.toLowerCase().replace(/\s/g, '')}`,
-        avatar: null,
-        banner: null,
-        verified: false,
-        enots: 0
-      });
+      try {
+        const response = await fetch('https://functions.poehali.dev/c02a7e14-6980-4dfe-9879-c2c9ebefdae8', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'register',
+            phone,
+            nickname,
+            username: `@${nickname.toLowerCase().replace(/\s/g, '')}`
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          localStorage.setItem('speaky_user', JSON.stringify(data.user));
+          onAuthComplete(data.user);
+        } else {
+          toast.error('Ошибка регистрации');
+        }
+      } catch (error) {
+        toast.error('Ошибка подключения к серверу');
+      }
     }
   };
 
@@ -49,7 +64,7 @@ const AuthScreen = ({ onAuthComplete }: AuthScreenProps) => {
               <Icon name="MessageCircle" size={32} className="text-primary" />
             </div>
           </div>
-          <h1 className="text-3xl font-bold">Messenger</h1>
+          <h1 className="text-3xl font-bold">Speaky</h1>
           <p className="text-muted-foreground">
             {step === 'phone' && 'Введите номер телефона'}
             {step === 'code' && 'Введите код из СМС'}

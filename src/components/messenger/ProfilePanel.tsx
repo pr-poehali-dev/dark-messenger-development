@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -15,11 +15,43 @@ const ProfilePanel = ({ user, onUpdateUser }: ProfilePanelProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [nickname, setNickname] = useState(user.nickname);
   const [username, setUsername] = useState(user.username);
+  const [stats, setStats] = useState({ friends_count: 0, groups_count: 0, channels_count: 0 });
 
-  const handleSave = () => {
-    onUpdateUser({ ...user, nickname, username });
-    setIsEditing(false);
-    toast.success('Профиль обновлен');
+  useEffect(() => {
+    loadStats();
+  }, []);
+
+  const loadStats = async () => {
+    try {
+      const response = await fetch(`https://functions.poehali.dev/d141a91b-1840-4612-951c-31a67ab14288?user_id=${user.id}&action=stats`);
+      const data = await response.json();
+      setStats(data);
+    } catch (error) {
+      console.error('Error loading stats:', error);
+    }
+  };
+
+  const handleSave = async () => {
+    try {
+      const response = await fetch('https://functions.poehali.dev/d141a91b-1840-4612-951c-31a67ab14288', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'update_profile',
+          user_id: user.id,
+          nickname,
+          username
+        })
+      });
+      const data = await response.json();
+      if (data.success) {
+        onUpdateUser(data.user);
+        setIsEditing(false);
+        toast.success('Профиль обновлен');
+      }
+    } catch (error) {
+      toast.error('Ошибка обновления профиля');
+    }
   };
 
   const handleVerification = () => {
@@ -137,15 +169,15 @@ const ProfilePanel = ({ user, onUpdateUser }: ProfilePanelProps) => {
           <h4 className="font-semibold mb-4">Статистика</h4>
           <div className="grid grid-cols-3 gap-4">
             <div className="text-center">
-              <p className="text-2xl font-bold">342</p>
+              <p className="text-2xl font-bold">{stats.friends_count}</p>
               <p className="text-sm text-muted-foreground">Друзей</p>
             </div>
             <div className="text-center">
-              <p className="text-2xl font-bold">12</p>
+              <p className="text-2xl font-bold">{stats.groups_count}</p>
               <p className="text-sm text-muted-foreground">Групп</p>
             </div>
             <div className="text-center">
-              <p className="text-2xl font-bold">8</p>
+              <p className="text-2xl font-bold">{stats.channels_count}</p>
               <p className="text-sm text-muted-foreground">Каналов</p>
             </div>
           </div>

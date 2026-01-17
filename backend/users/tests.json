@@ -1,0 +1,16 @@
+{
+  "tests": [
+    {
+      "name": "Get user stats",
+      "method": "GET",
+      "path": "/?user_id=1&action=stats",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "friends_count": 0,
+        "groups_count": 0,
+        "channels_count": 0
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
@@ -5,7 +6,48 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import Icon from '@/components/ui/icon';
 import { toast } from 'sonner';
 
-const SettingsPanel = () => {
+interface SettingsPanelProps {
+  user: any;
+  onUpdateUser: (user: any) => void;
+}
+
+const SettingsPanel = ({ user, onUpdateUser }: SettingsPanelProps) => {
+  const [blockedUsers, setBlockedUsers] = useState<any[]>([]);
+
+  useEffect(() => {
+    loadBlockedUsers();
+  }, []);
+
+  const loadBlockedUsers = async () => {
+    try {
+      const response = await fetch(`https://functions.poehali.dev/d141a91b-1840-4612-951c-31a67ab14288?user_id=${user.id}&action=blocked`);
+      const data = await response.json();
+      setBlockedUsers(data);
+    } catch (error) {
+      console.error('Error loading blocked users:', error);
+    }
+  };
+
+  const handleLanguageChange = async (language: string) => {
+    try {
+      const response = await fetch('https://functions.poehali.dev/d141a91b-1840-4612-951c-31a67ab14288', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'update_profile',
+          user_id: user.id,
+          language
+        })
+      });
+      const data = await response.json();
+      if (data.success) {
+        onUpdateUser(data.user);
+        toast.success('Язык изменен');
+      }
+    } catch (error) {
+      toast.error('Ошибка изменения языка');
+    }
+  };
   return (
     <div className="flex-1 overflow-y-auto bg-background">
       <div className="max-w-2xl mx-auto p-6 space-y-6">
@@ -49,7 +91,7 @@ const SettingsPanel = () => {
           <div className="space-y-4">
             <div>
               <label className="text-sm font-medium mb-2 block">Язык интерфейса</label>
-              <Select defaultValue="ru">
+              <Select value={user.language || 'ru'} onValueChange={handleLanguageChange}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -111,9 +153,32 @@ const SettingsPanel = () => {
           <p className="text-sm text-muted-foreground mb-4">
             Пользователи из черного списка не смогут писать вам сообщения
           </p>
-          <Button variant="outline" onClick={() => toast.success('Черный список пуст')}>
-            Посмотреть заблокированных (0)
-          </Button>
+          {blockedUsers.length > 0 ? (
+            <div className="space-y-2">
+              {blockedUsers.map((blocked) => (
+                <div key={blocked.id} className="flex items-center justify-between p-2 bg-muted rounded">
+                  <span>{blocked.nickname} ({blocked.username})</span>
+                  <Button size="sm" variant="ghost" onClick={async () => {
+                    try {
+                      await fetch('https://functions.poehali.dev/d141a91b-1840-4612-951c-31a67ab14288', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'unblock', user_id: user.id, blocked_user_id: blocked.id })
+                      });
+                      loadBlockedUsers();
+                      toast.success('Пользователь разблокирован');
+                    } catch (error) {
+                      toast.error('Ошибка');
+                    }
+                  }}>
+                    Разблокировать
+                  </Button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">Черный список пуст</p>
+          )}
         </Card>
 
         <Card className="p-6">

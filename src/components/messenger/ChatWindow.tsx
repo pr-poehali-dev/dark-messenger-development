@@ -39,9 +39,37 @@ const ChatWindow = ({ chat, currentUser }: ChatWindowProps) => {
     }
   };
 
-  const handleFileUpload = (type: 'photo' | 'video') => {
-    fileInputRef.current?.click();
-    toast.success(`Загрузка ${type === 'photo' ? 'фото' : 'видео'}...`);
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && currentUser?.id) {
+      try {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = async () => {
+          const base64 = (reader.result as string).split(',')[1];
+          const response = await fetch('https://functions.poehali.dev/ab07fbd5-b989-428e-8836-8322eb53272c', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ file: base64, type: 'photo', user_id: currentUser.id })
+          });
+          const data = await response.json();
+          if (data.success) {
+            const newMessage = {
+              id: messages.length + 1,
+              text: '',
+              mediaUrl: data.url,
+              sender: 'me',
+              time: new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
+              reactions: []
+            };
+            setMessages([...messages, newMessage]);
+            toast.success('Фото отправлено');
+          }
+        };
+      } catch (error) {
+        toast.error('Ошибка загрузки фото');
+      }
+    }
   };
 
   const handleVoiceRecord = () => {
@@ -163,8 +191,9 @@ const ChatWindow = ({ chat, currentUser }: ChatWindowProps) => {
                 type="file"
                 className="hidden"
                 accept="image/*,video/*"
+                onChange={handleFileUpload}
               />
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleFileUpload('photo')}>
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => fileInputRef.current?.click()}>
                 <Icon name="Paperclip" size={20} />
               </Button>
             </div>
