@@ -8,12 +8,13 @@ import MusicPanel from './MusicPanel';
 import WalletPanel from './WalletPanel';
 import ShopPanel from './ShopPanel';
 import FriendsPanel from './FriendsPanel';
+import MyGiftsPanel from './MyGiftsPanel';
 
 interface MessengerLayoutProps {
   currentUser: any;
 }
 
-type View = 'chats' | 'profile' | 'settings' | 'music' | 'wallet' | 'shop' | 'friends';
+type View = 'chats' | 'profile' | 'settings' | 'music' | 'wallet' | 'shop' | 'friends' | 'gifts';
 
 const MessengerLayout = ({ currentUser }: MessengerLayoutProps) => {
   const [currentView, setCurrentView] = useState<View>('chats');
@@ -34,6 +35,8 @@ const MessengerLayout = ({ currentUser }: MessengerLayoutProps) => {
         return <ShopPanel user={user} onUpdateUser={setUser} />;
       case 'friends':
         return <FriendsPanel />;
+      case 'gifts':
+        return <MyGiftsPanel user={user} onUpdateUser={setUser} />;
       default:
         return (
           <>

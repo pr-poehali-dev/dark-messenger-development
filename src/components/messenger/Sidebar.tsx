@@ -13,6 +13,7 @@ const Sidebar = ({ currentView, onViewChange, user }: SidebarProps) => {
   const menuItems = [
     { id: 'chats', icon: 'MessageCircle', label: 'Чаты' },
     { id: 'friends', icon: 'Users', label: 'Друзья' },
+    { id: 'gifts', icon: 'Gift', label: 'Мои подарки' },
     { id: 'music', icon: 'Music', label: 'Музыка' },
     { id: 'wallet', icon: 'Wallet', label: 'Кошелек' },
     { id: 'shop', icon: 'ShoppingBag', label: 'Магазин' },

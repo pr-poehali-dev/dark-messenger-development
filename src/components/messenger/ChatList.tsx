@@ -13,22 +13,9 @@ interface ChatListProps {
 
 const ChatList = ({ onSelectChat, selectedChat }: ChatListProps) => {
   const [searchQuery, setSearchQuery] = useState('');
-
-  const mockChats = [
-    { id: 1, name: 'Александр', username: '@alexander', avatar: null, lastMessage: 'Привет! Как дела?', time: '12:30', unread: 2, online: true, type: 'personal' },
-    { id: 2, name: 'Мария', username: '@maria', avatar: null, lastMessage: 'Отправила тебе файлы', time: '11:15', unread: 0, online: false, type: 'personal' },
-    { id: 3, name: 'Разработчики', username: '@devs', avatar: null, lastMessage: 'Иван: Созвон в 15:00', time: '10:45', unread: 5, online: true, type: 'group', members: 12 }
-  ];
-
-  const mockGroups = [
-    { id: 3, name: 'Разработчики', username: '@devs', avatar: null, lastMessage: 'Иван: Созвон в 15:00', time: '10:45', unread: 5, type: 'group', members: 12 },
-    { id: 4, name: 'Дизайнеры', username: '@designers', avatar: null, lastMessage: 'Анна: Новый макет готов', time: '09:30', unread: 1, type: 'group', members: 8 }
-  ];
-
-  const mockChannels = [
-    { id: 5, name: 'Новости IT', username: '@itnews', avatar: null, lastMessage: 'Вышла новая версия React', time: '14:20', unread: 0, type: 'channel', subscribers: 1500 },
-    { id: 6, name: 'Дизайн', username: '@designchannel', avatar: null, lastMessage: 'Топ UI тренды 2024', time: '13:10', unread: 3, type: 'channel', subscribers: 2300 }
-  ];
+  const [chats, setChats] = useState<any[]>([]);
+  const [groups, setGroups] = useState<any[]>([]);
+  const [channels, setChannels] = useState<any[]>([]);
 
   const renderChatItem = (chat: any) => (
     <div
@@ -104,15 +91,55 @@ const ChatList = ({ onSelectChat, selectedChat }: ChatListProps) => {
         </TabsList>
         
         <TabsContent value="all" className="flex-1 overflow-y-auto p-2 scrollbar-hide mt-0">
-          {mockChats.map(renderChatItem)}
+          {chats.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full text-center p-8">
+              <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-4">
+                <Icon name="MessageCircle" size={40} className="text-muted-foreground" />
+              </div>
+              <h3 className="font-semibold mb-2">Нет чатов</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Найдите друзей и начните общение
+              </p>
+              <Button variant="outline" size="sm">
+                <Icon name="UserPlus" size={16} className="mr-2" />
+                Найти друзей
+              </Button>
+            </div>
+          ) : (
+            chats.map(renderChatItem)
+          )}
         </TabsContent>
         
         <TabsContent value="groups" className="flex-1 overflow-y-auto p-2 scrollbar-hide mt-0">
-          {mockGroups.map(renderChatItem)}
+          {groups.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full text-center p-8">
+              <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-4">
+                <Icon name="Users" size={40} className="text-muted-foreground" />
+              </div>
+              <h3 className="font-semibold mb-2">Нет групп</h3>
+              <p className="text-sm text-muted-foreground">
+                Создайте группу или вступите в существующую
+              </p>
+            </div>
+          ) : (
+            groups.map(renderChatItem)
+          )}
         </TabsContent>
         
         <TabsContent value="channels" className="flex-1 overflow-y-auto p-2 scrollbar-hide mt-0">
-          {mockChannels.map(renderChatItem)}
+          {channels.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full text-center p-8">
+              <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-4">
+                <Icon name="Radio" size={40} className="text-muted-foreground" />
+              </div>
+              <h3 className="font-semibold mb-2">Нет каналов</h3>
+              <p className="text-sm text-muted-foreground">
+                Подпишитесь на интересные каналы
+              </p>
+            </div>
+          ) : (
+            channels.map(renderChatItem)
+          )}
         </TabsContent>
       </Tabs>
     </div>
