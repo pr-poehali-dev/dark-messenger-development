@@ -1,21 +1,70 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Icon from '@/components/ui/icon';
+import CreateGroupDialog from './CreateGroupDialog';
+import { toast } from 'sonner';
 
 interface ChatListProps {
   onSelectChat: (chat: any) => void;
   selectedChat: any;
+  currentUser: any;
 }
 
-const ChatList = ({ onSelectChat, selectedChat }: ChatListProps) => {
+const ChatList = ({ onSelectChat, selectedChat, currentUser }: ChatListProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [chats, setChats] = useState<any[]>([]);
   const [groups, setGroups] = useState<any[]>([]);
   const [channels, setChannels] = useState<any[]>([]);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+
+  useEffect(() => {
+    if (currentUser?.id) {
+      loadChats();
+    }
+  }, [currentUser]);
+
+  const loadChats = async () => {
+    try {
+      const response = await fetch(`https://functions.poehali.dev/a18ead87-eff6-4d9c-a884-1ddcc97ff217?action=list&user_id=${currentUser.id}`);
+      const data = await response.json();
+      
+      const allChats = data.filter((c: any) => c.type === 'personal');
+      const allGroups = data.filter((c: any) => c.type === 'group');
+      const allChannels = data.filter((c: any) => c.type === 'channel');
+      
+      setChats(allChats);
+      setGroups(allGroups);
+      setChannels(allChannels);
+    } catch (error) {
+      console.error('Error loading chats:', error);
+    }
+  };
+
+  const handleCreateGroup = async (groupData: any) => {
+    try {
+      const response = await fetch('https://functions.poehali.dev/a18ead87-eff6-4d9c-a884-1ddcc97ff217', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'create',
+          user_id: currentUser.id,
+          type: groupData.type,
+          name: groupData.name
+        })
+      });
+      const data = await response.json();
+      if (data.success) {
+        loadChats();
+        toast.success(`${groupData.type === 'group' ? 'Группа' : 'Канал'} создан`);
+      }
+    } catch (error) {
+      toast.error('Ошибка создания');
+    }
+  };
 
   const renderChatItem = (chat: any) => (
     <div
@@ -62,8 +111,8 @@ const ChatList = ({ onSelectChat, selectedChat }: ChatListProps) => {
       <div className="p-4 border-b border-border space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-bold">Сообщения</h2>
-          <Button variant="ghost" size="icon" className="h-8 w-8">
-            <Icon name="PenSquare" size={18} />
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setCreateDialogOpen(true)}>
+            <Icon name="Plus" size={18} />
           </Button>
         </div>
         <div className="relative">
@@ -142,6 +191,12 @@ const ChatList = ({ onSelectChat, selectedChat }: ChatListProps) => {
           )}
         </TabsContent>
       </Tabs>
+      
+      <CreateGroupDialog 
+        open={createDialogOpen} 
+        onOpenChange={setCreateDialogOpen}
+        onCreate={handleCreateGroup}
+      />
     </div>
   );
 };

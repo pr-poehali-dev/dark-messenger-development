@@ -19,6 +19,10 @@ const Sidebar = ({ currentView, onViewChange, user }: SidebarProps) => {
     { id: 'shop', icon: 'ShoppingBag', label: 'Магазин' },
     { id: 'settings', icon: 'Settings', label: 'Настройки' }
   ];
+  
+  if (user?.is_admin) {
+    menuItems.push({ id: 'admin', icon: 'ShieldCheck', label: 'Админ-панель' });
+  }
 
   return (
     <div className="w-20 bg-sidebar border-r border-sidebar-border flex flex-col items-center py-4 space-y-4">
@@ -52,7 +56,15 @@ const Sidebar = ({ currentView, onViewChange, user }: SidebarProps) => {
         ))}
       </div>
 
-      <Button variant="ghost" size="icon" className="w-12 h-12 rounded-xl">
+      <Button 
+        variant="ghost" 
+        size="icon" 
+        className="w-12 h-12 rounded-xl"
+        onClick={() => {
+          localStorage.removeItem('speaky_user');
+          window.location.reload();
+        }}
+      >
         <Icon name="LogOut" size={20} />
       </Button>
     </div>

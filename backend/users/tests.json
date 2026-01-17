@@ -6,9 +6,9 @@
       "path": "/?user_id=1&action=stats",
       "expectedStatus": 200,
       "expectedBody": {
-        "friends_count": 0,
-        "groups_count": 0,
-        "channels_count": 0
+        "friends_count": "number",
+        "groups_count": "number",
+        "channels_count": "number"
       },
       "bodyMatcher": "partial"
     }

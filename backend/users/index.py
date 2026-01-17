@@ -78,6 +78,23 @@ def handler(event: dict, context) -> dict:
                     'body': json.dumps(blocked),
                     'isBase64Encoded': False
                 }
+            
+            elif action == 'search':
+                username = params.get('username', '').strip()
+                cur.execute(f'''
+                    SELECT id, phone, nickname, username, avatar_url, banner_url, 
+                           verified, enots, is_admin, language
+                    FROM {schema}.users
+                    WHERE username = %s
+                ''', (username,))
+                
+                user = cur.fetchone()
+                return {
+                    'statusCode': 200,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'user': dict(user) if user else None}),
+                    'isBase64Encoded': False
+                }
         
         elif method == 'PUT':
             body = json.loads(event.get('body', '{}'))
@@ -129,7 +146,7 @@ def handler(event: dict, context) -> dict:
             
             elif action == 'verify_user':
                 admin_id = body.get('admin_id')
-                target_user_id = body.get('target_user_id')
+                target_user_id = body.get('user_id')
                 
                 cur.execute(f'SELECT is_admin FROM {schema}.users WHERE id = %s', (admin_id,))
                 is_admin = cur.fetchone()
@@ -144,6 +161,36 @@ def handler(event: dict, context) -> dict:
                 
                 cur.execute(f'''
                     UPDATE {schema}.users SET verified = TRUE WHERE id = %s
+                    RETURNING id, nickname, username, verified
+                ''', (target_user_id,))
+                
+                user = dict(cur.fetchone())
+                conn.commit()
+                
+                return {
+                    'statusCode': 200,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'success': True, 'user': user}),
+                    'isBase64Encoded': False
+                }
+            
+            elif action == 'unverify_user':
+                admin_id = body.get('admin_id')
+                target_user_id = body.get('user_id')
+                
+                cur.execute(f'SELECT is_admin FROM {schema}.users WHERE id = %s', (admin_id,))
+                is_admin = cur.fetchone()
+                
+                if not is_admin or not is_admin['is_admin']:
+                    return {
+                        'statusCode': 403,
+                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                        'body': json.dumps({'error': 'Admin access required'}),
+                        'isBase64Encoded': False
+                    }
+                
+                cur.execute(f'''
+                    UPDATE {schema}.users SET verified = FALSE WHERE id = %s
                     RETURNING id, nickname, username, verified
                 ''', (target_user_id,))
                 
